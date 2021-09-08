@@ -1,3 +1,4 @@
+const dbConfig = require("../../data/db-config");
 const Scheme = require("./scheme-model");
 /*
   If `scheme_id` does not exist in the database:
@@ -8,15 +9,30 @@ const Scheme = require("./scheme-model");
   }
 */
 async function checkSchemeId(req, res, next) {
+  // try {
+  //   const scheme = await Scheme.findById(req.params.id);
+  //   if (!scheme) {
+  //     next({
+  //       status: 404,
+  //       message: `scheme with scheme_id ${req.params.id} not found`,
+  //     });
+  //   } else {
+  //     req.scheme = scheme;
+  //     next();
+  //   }
+  // } catch (err) {
+  //   next(err);
+  // }
   try {
-    const scheme = await Scheme.findById(req.params.id);
-    if (!scheme) {
+    const existing = await dbConfig("schemes")
+      .where("scheme_id", req.params.scheme_id)
+      .first();
+    if (!existing) {
       next({
         status: 404,
-        message: `scheme with scheme_id ${req.params.id} not found`,
+        message: `scheme with scheme_id ${req.params.scheme_id} not found`,
       });
     } else {
-      req.scheme = scheme;
       next();
     }
   } catch (err) {
@@ -34,10 +50,17 @@ async function checkSchemeId(req, res, next) {
 */
 const validateScheme = (req, res, next) => {
   const { scheme_name } = req.body;
-  if (!scheme_name || scheme_name === "" || typeof scheme_name === "string") {
-    res.status(400).json({
+  if (
+    scheme_name === undefined ||
+    typeof scheme_name !== "string" ||
+    !scheme_name.trim()
+  ) {
+    next({
+      status: 400,
       message: "invalid scheme_name",
     });
+  } else {
+    next();
   }
 };
 
@@ -53,13 +76,14 @@ const validateScheme = (req, res, next) => {
 const validateStep = (req, res, next) => {
   const { instructions, step_number } = req.body;
   if (
-    !instructions ||
-    instructions === "" ||
+    instructions === undefined ||
     typeof instructions !== "string" ||
+    !instructions.trim() ||
     typeof step_number !== "number" ||
     step_number < 1
   ) {
-    res.status(400).json({
+    next({
+      status: 400,
       message: "invalid step",
     });
   } else {
