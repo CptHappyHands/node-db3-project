@@ -162,6 +162,11 @@ async function findSteps(scheme_id) {
 }
 
 function add(scheme) {
+  return db("schemes")
+    .insert(scheme)
+    .then(([scheme_id]) => {
+      return db("schemes").where("scheme_id", scheme_id).first();
+    });
   // EXERCISE D
   /*
     1D- This function creates a new scheme and resolves to _the newly created scheme_.
