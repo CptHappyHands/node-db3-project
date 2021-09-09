@@ -38,19 +38,26 @@ function find() {
 async function findById(scheme_id) {
   const rows = await db("schemes as sc")
     .leftJoin("steps as st", "sc.scheme_id", "st.scheme_id")
-    .select("sc.scheme_name", "st.*")
+    .select("sc.scheme_name", "st.*", "sc.scheme_id")
     .where("sc.scheme_id", scheme_id)
     .orderBy("step_number", "asc");
 
   const result = {
     scheme_id: rows[0].scheme_id,
     scheme_name: rows[0].scheme_name,
-    steps: rows.map((row) => ({
-      step_id: row.step_id,
-      step_number: row.step_number,
-      instructions: row.instructions,
-    })),
+    steps: [],
   };
+
+  rows.forEach((row) => {
+    if (row.step_id) {
+      result.steps.push({
+        step_id: row.step_id,
+        step_number: row.step_number,
+        instructions: row.instructions,
+      });
+    }
+  });
+
   return result;
 
   // EXERCISE B
@@ -121,7 +128,16 @@ async function findById(scheme_id) {
   */
 }
 
-function findSteps(scheme_id) {
+async function findSteps(scheme_id) {
+  const rows = await db("schemes as sc")
+    .leftJoin("steps as st", "sc.scheme_id", "st.scheme_id")
+    .select("sc.scheme_name", "st.step_id", "st.step_number", "st.instructions")
+    .where("sc.scheme_id", scheme_id)
+    .orderBy("step_number", "asc");
+
+  if (!rows[0].step_id) return [];
+  return rows;
+
   // EXERCISE C
   /*
     1C- Build a query in Knex that returns the following data.
