@@ -174,6 +174,14 @@ function add(scheme) {
 }
 
 function addStep(scheme_id, step) {
+  return db("steps")
+    .insert({
+      ...step,
+      scheme_id,
+    })
+    .then(() => {
+      return db("steps").where("scheme_id", scheme_id).orderBy("step_number");
+    });
   // EXERCISE E
   /*
     1E- This function adds a step to the scheme with the given `scheme_id`
